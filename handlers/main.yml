@@ -1,0 +1,10 @@
+---
+# handlers file for role_jenkins_slave
+- name: Start Jenkins JNLP slave
+  become: "yes"
+  systemd:
+    name: jenkins-slave
+    enabled: "yes"
+    state: restarted
+    daemon_reload: "yes"
+  tags: jenkins-slave
