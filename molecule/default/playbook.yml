@@ -1,0 +1,27 @@
+---
+- name: Converge
+  hosts: all
+  vars:
+    - js_user_groups_definitions:
+        - name: jenkins
+    - js_users_definition:
+        - name: jenkins user
+          username: jenkins
+          groups: [jenkins]
+  pre_tasks:
+    - name: get the password admin jenkins
+      command: docker exec -i jenkins_master cat /var/jenkins_home/secrets/initialAdminPassword
+      register: admin_jenkins_user_password
+      changed_when: "False"
+      delegate_to: localhost
+
+  roles:
+    - role: ansible-role-jenkins-slave
+      jenkins_master: "http://172.17.0.3:8080"
+      jenkins_master_user: admin
+      jenkins_master_password: "{{admin_jenkins_user_password.stdout}}"
+      jenkins_slave_home: /home/jenkins
+      jenkins_slave_nb_executor: 5
+      jenkins_slave_user: jenkins
+      jenkins_slave_group: jenkins
+      jenkins_slave_name: docker-slave

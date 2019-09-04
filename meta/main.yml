@@ -1,0 +1,29 @@
+---
+galaxy_info:
+  author: lawwrenz23
+  description: Jenkins Slave role
+  company: N/A
+
+  license: BSD
+
+  min_ansible_version: 2.4
+
+  platforms:
+    - name: EL
+      versions:
+        - 7
+
+  galaxy_tags:
+    - java
+    - systemd
+    - jenkins
+
+dependencies:
+  - role: singleplatform-eng.users
+    users_create_per_user_group: false
+    groups_to_create: "{{ js_user_groups_definitions | default(omit) }}"
+    users: "{{ js_users_definition }}"
+  - role: geerlingguy.java
+    when: "ansible_os_family == 'RedHat'"
+    java_packages:
+      - java-1.8.0-openjdk
