@@ -19,4 +19,5 @@
       command: docker exec -i jenkins_master ls -ld /var/jenkins_home/secrets/initialAdminPassword
       register: jenkins_master_password_path
       retries: 5
+      delay: 10
       until: jenkins_master_password_path.stdout_lines
