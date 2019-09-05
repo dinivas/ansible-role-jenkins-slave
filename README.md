@@ -32,7 +32,7 @@ Example Playbook
 
     - hosts: servers
       roles:
-        - role: role_jenkins_slave
+        - role: ansible-role-jenkins-slave
           jenkins_master: "http://172.17.0.3:8080"
           jenkins_master_user: admin
           jenkins_master_password: "{{admin_jenkins_user_password.stdout}}"
