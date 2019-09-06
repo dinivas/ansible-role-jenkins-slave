@@ -6,6 +6,8 @@
       set_fact:
         jenkins_master_ip_address: "{{ ansible_all_ipv4_addresses[0] }}"
 
+    - debug: var=ansible_all_ipv4_addresses
+
 - name: Converge
   hosts: jenkins_slaves
   vars:
