@@ -1,3 +1,18 @@
 *.retry
 */__pycache__
 *.pyc
+
+# molecule
+.molecule/
+
+.cache/
+
+# Python
+*.pyc
+
+*.log
+
+*.pytest_cache/
+
+# Tox
+.tox/

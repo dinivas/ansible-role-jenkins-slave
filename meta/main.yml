@@ -1,7 +1,8 @@
 ---
 galaxy_info:
-  author: lawwrenz23
-  description: Jenkins Slave role
+  role_name: jenkins-slave
+  author: lawwrenz23,orachide
+  description: Ansible role that install Jenkins Slave using JNLP method
   company: N/A
 
   license: BSD

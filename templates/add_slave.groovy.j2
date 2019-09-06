@@ -1,0 +1,43 @@
+/**
+ * This script is meant to be executed by a parameterized job in Jenkins and will then create new agents (slaves) as per the parameters
+ *
+ * SUGGESTED PAIRED PARAMETERS IN JENKINS (type, name, default values, description):
+ *
+ * Text - AgentList - "TestAutoAgent" - Name of agents to create, optionally more than one (each line makes one agent)
+ * String - AgentDescription - "Auto-created Jenkins agent" - Description that'll be set for _every_ created agent
+ * String - AgentHome - "D:\JenkinsAgent" - Remote filesystem root for the agent
+ * String - AgentExecutors - 2 - Number of executors for the agent
+ */
+
+import hudson.model.Node.Mode
+import hudson.slaves.*
+import jenkins.model.Jenkins
+
+/*
+//Handy debug logging
+Jenkins.instance.nodes.each {
+    println "BEFORE - Agent: $it"
+}
+*/
+
+// There is a constructor that also takes a list of properties (env vars) at the end, but haven't needed that yet
+DumbSlave dumb = new DumbSlave(
+        "{{ jenkins_slave_name }}",   // Agent name, usually matches the host computer's machine name
+        "{{ jenkins_slave_home }}",  // Workspace on the agent's computer
+        new JNLPLauncher()          // Launch strategy, JNLP is the Java Web Start setting services use
+        )
+
+dumb.setNodeDescription("{{ jenkins_slave_description }}") // Agent description
+dumb.setNumExecutors({{ jenkins_slave_nb_executor }}) // Number of executors
+dumb.setLabelString("{{ jenkins_slave_labels | join(' ') }}") // Labels
+dumb.setMode(Mode.NORMAL) // "Usage" field, EXCLUSIVE is "only tied to node", NORMAL is "any"
+dumb.setRetentionStrategy(RetentionStrategy.INSTANCE) // Is the "Availability" field and INSTANCE means "Always"
+
+Jenkins.instance.addNode(dumb)
+println "Agent '{{ jenkins_slave_name }}' created with {{ jenkins_slave_nb_executor }} executors and home '{{ jenkins_slave_home }}'"
+
+/*
+Jenkins.instance.nodes.each {
+    println "AFTER - Agent: $it"
+}
+*/
