@@ -14,7 +14,7 @@ Role Variables
 
 | Variables | Required | Default value | Description |
 |-----------|----------|---------------|-------------|
-| jenkins_master | true | *None*       | Url of ypur jenkins master |
+| jenkins_master_url | true | *None*       | Url of ypur jenkins master |
 | jenkins_master_user | true | *None* | Username for connection to master |
 | jenkins_master_password | true | *None* | Password for connection to master |
 | jenkins_slave_home | true | *None* | Jenkins slave home path (*I suggest you to configure a fileSystem*) | jenkins_slave_nb_executor | true | *None* | Number of executor |
@@ -33,9 +33,9 @@ Example Playbook
     - hosts: servers
       roles:
         - role: ansible-role-jenkins-slave
-          jenkins_master: "http://172.17.0.3:8080"
+          jenkins_master_url: "http://127.0.0.1:8080"
           jenkins_master_user: admin
-          jenkins_master_password: "{{admin_jenkins_user_password.stdout}}"
+          jenkins_master_password: password
           jenkins_slave_home: /home/jenkins
           jenkins_slave_nb_executor: 5
           jenkins_slave_user: jenkins

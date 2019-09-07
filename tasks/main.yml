@@ -4,7 +4,7 @@
 - name: Check if Jenkins JNLP slave variables are defined
   assert:
     that:
-      - "jenkins_master is defined"
+      - "jenkins_master_url is defined"
       - "jenkins_master_user is defined"
       - "jenkins_master_password is defined"
       - "jenkins_slave_home is defined"
@@ -17,55 +17,25 @@
 
 - name: Check if jenkins node exists
   uri:
-    url: "{{jenkins_master}}/computer/{{jenkins_slave_name}}/"
-    user: "{{jenkins_master_user}}"
-    password: "{{jenkins_master_password}}"
+    url: "{{ jenkins_master_url }}/computer/{{ jenkins_slave_name }}/"
+    user: "{{ jenkins_master_user }}"
+    password: "{{ jenkins_master_password }}"
     force_basic_auth: "yes"
     use_proxy: "no"
   register: jenkins_slave_exists
   ignore_errors: "yes"
 
-- name: Get the crumb jenkins
-  uri:
-    url: '{{jenkins_master}}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,":",//crumb)'
-    user: "{{jenkins_master_user}}"
-    password: "{{jenkins_master_password}}"
-    force_basic_auth: "yes"
-    return_content: "yes"
-    use_proxy: "no"
-  register: crumb
+# - name: Get the crumb jenkins
+#   uri:
+#     url: '{{ jenkins_master_url }}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,":",//crumb)'
+#     user: "{{ jenkins_master_user }}"
+#     password: "{{ jenkins_master_password }}"
+#     force_basic_auth: true
+#     return_content: true
+#     use_proxy: "no"
+#   register: crumb
 
-- name: Create a jenkins node
-  uri:
-    method: POST
-    url: "{{jenkins_master}}/computer/doCreateItem?name={{jenkins_slave_name}}&type=hudson.slaves.DumbSlave"
-    user: "{{jenkins_master_user}}"
-    password: "{{jenkins_master_password}}"
-    force_basic_auth: "yes"
-    status_code: 302
-    use_proxy: "no"
-    headers:
-      Jenkins-Crumb: "{{ crumb.content.split(':')[1] }}"
-      Content-Type: application/x-www-form-urlencoded
-    body: |
-      json={
-        "name": "{{jenkins_slave_name}}",
-        "nodeDescription": "{{jenkins_slave_name}}",
-        "numExecutors": "{{jenkins_slave_nb_executor}}",
-        "remoteFS": "{{jenkins_slave_home}}",
-        "labelString": "",
-        "mode": "NORMAL",
-        "": ["hudson.slaves.JNLPLauncher", "hudson.slaves.RetentionStrategy$Always"],
-        "launcher": {"stapler-class": "hudson.slaves.JNLPLauncher", "$class": "hudson.slaves.JNLPLauncher", "tunnel": "", "vmargs": ""},
-        "retentionStrategy": {"stapler-class": "hudson.slaves.RetentionStrategy$Always", "$class": "hudson.slaves.RetentionStrategy$Always"},
-        "nodeProperties": {"stapler-class-bag": "true"}, "type": "hudson.slaves.DumbSlave"}
-      }
-  when: jenkins_slave_exists.status != 200
-
-- name: get the secret jenkins slave
-  shell: curl -L -s -u "{{jenkins_master_user}}":"{{jenkins_master_password}}" -X GET "{{jenkins_master}}/computer/{{jenkins_slave_name}}/slave-agent.jnlp" | sed "s/.*<application-desc main-class=\"hudson.remoting.jnlp.Main\"><argument>\([a-z0-9]*\).*/\1/"
-  register: jenkins_slave_secret
-  changed_when: "False"
+# - debug: var=crumb
 
 - name: Make Jenkins JNLP slave directories
   become: true
@@ -77,13 +47,42 @@
   with_items:
     - "{{ jenkins_slave_home }}"
 
+- name: "Register jenkins agent on master using groovy script"
+  jenkins_script:
+    user: "{{ jenkins_master_user }}"
+    password: "{{ jenkins_master_password }}"
+    validate_certs: false
+    timeout: 120
+    url: "{{ jenkins_master_url }}"
+    script: "{{ lookup('template', 'add_slave.groovy.j2') }}"
+
+- name: Get the secret jenkins slave
+  uri:
+    url: "{{ jenkins_master_url }}/computer/{{ jenkins_slave_name }}/slave-agent.jnlp"
+    method: GET
+    force_basic_auth: true
+    user: "{{ jenkins_master_user }}"
+    password: "{{ jenkins_master_password }}"
+    return_content: true
+  register: jenkins_jnlp_endpoint_response
+
+- debug: var=jenkins_jnlp_endpoint_response verbosity=2
+
+- name: Extract Slave secret from http response
+  set_fact:
+    jenkins_slave_secret: "{{ jenkins_jnlp_endpoint_response.content | regex_search('([a-z0-9]*)(?=</argument>)') }}"
+
+- debug: var=jenkins_slave_secret verbosity=2
+
 - name: Template Jenkins JNLP slave files
   become: true
   template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
+    owner: "{{ jenkins_slave_user }}"
+    group: "{{ jenkins_slave_group }}"
   with_items:
-    - { src: jenkins-slave.service, dest: /etc/systemd/system/jenkins-slave.service, mode: 755 }
-    - { src: jenkins-slave.default, dest: /etc/default/jenkins-slave, mode: 644 }
+    - { src: jenkins-slave.service, dest: /etc/systemd/system/jenkins-slave.service, mode: 755}
+    - {src: jenkins-slave.default, dest: /etc/default/jenkins-slave, mode: 644}
   notify: Start Jenkins JNLP slave
   tags: jenkins-slave
