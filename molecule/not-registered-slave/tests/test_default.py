@@ -6,7 +6,7 @@ testinfra_hosts = testinfra.utils.ansible_runner.AnsibleRunner(
     os.environ['MOLECULE_INVENTORY_FILE']).get_hosts('all')
 
 
-def test_service_is_started(host):
+def test_service_is_not_started(host):
     ansible_vars = host.ansible.get_variables()
     if (ansible_vars['inventory_hostname'].startswith('js_centos')):
         service_file = host.file('/etc/systemd/system/jenkins-slave.service')
@@ -22,5 +22,5 @@ def test_service_is_started(host):
         assert service_default_file.group == 'jenkins'
 
         service = host.service('jenkins-slave')
-        assert service.is_running
-        assert service.is_enabled
+        assert service.is_running is False
+        assert service.is_enabled is False

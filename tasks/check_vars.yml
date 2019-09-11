@@ -1,0 +1,20 @@
+---
+
+- name: "Check vars | Assert sb_users_definition is defined"
+  assert:
+    that:
+      - "jenkins_master_url is defined"
+      - "jenkins_master_user is defined"
+      - "jenkins_master_password is defined"
+    msg: "All Jenkins Master info must be defined"
+  tags:
+    - register
+
+- name: Check if Jenkins JNLP slave variables are defined
+  assert:
+    that:
+      - "jenkins_slave_home is defined"
+      - "jenkins_slave_nb_executor is defined"
+      - "jenkins_slave_user is defined"
+      - "jenkins_slave_group is defined"
+      - "jenkins_slave_name is defined"

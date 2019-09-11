@@ -7,4 +7,5 @@
     enabled: "yes"
     state: restarted
     daemon_reload: "yes"
-  tags: jenkins-slave
+  when:  # Run this handler only if skip_start_service has been set to true
+    - not (skip_start_service | default(true))

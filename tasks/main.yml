@@ -1,41 +1,7 @@
 ---
 # tasks file for role_jenkins_slave
 
-- name: Check if Jenkins JNLP slave variables are defined
-  assert:
-    that:
-      - "jenkins_master_url is defined"
-      - "jenkins_master_user is defined"
-      - "jenkins_master_password is defined"
-      - "jenkins_slave_home is defined"
-      - "jenkins_slave_nb_executor is defined"
-      - "jenkins_slave_user is defined"
-      - "jenkins_slave_group is defined"
-      - "jenkins_slave_name is defined"
-  tags:
-    - jenkins-slave
-
-- name: Check if jenkins node exists
-  uri:
-    url: "{{ jenkins_master_url }}/computer/{{ jenkins_slave_name }}/"
-    user: "{{ jenkins_master_user }}"
-    password: "{{ jenkins_master_password }}"
-    force_basic_auth: "yes"
-    use_proxy: "no"
-  register: jenkins_slave_exists
-  ignore_errors: "yes"
-
-# - name: Get the crumb jenkins
-#   uri:
-#     url: '{{ jenkins_master_url }}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,":",//crumb)'
-#     user: "{{ jenkins_master_user }}"
-#     password: "{{ jenkins_master_password }}"
-#     force_basic_auth: true
-#     return_content: true
-#     use_proxy: "no"
-#   register: crumb
-
-# - debug: var=crumb
+- import_tasks: check_vars.yml
 
 - name: Make Jenkins JNLP slave directories
   become: true
@@ -46,6 +12,17 @@
     group: "{{ jenkins_slave_group }}"
   with_items:
     - "{{ jenkins_slave_home }}"
+    - "{{ jenkins_slave_run }}"
+
+- name: Download slave.jar file from Jenkins master
+  get_url:
+    url: "{{ jenkins_master_url }}/jnlpJars/slave.jar"
+    dest: "{{ jenkins_slave_run }}/slave.jar"
+    owner: "{{ jenkins_slave_user }}"
+    group: "{{ jenkins_slave_group }}"
+    mode: '0774'
+  tags:
+    - register
 
 - name: "Register jenkins agent on master using groovy script"
   jenkins_script:
@@ -55,6 +32,8 @@
     timeout: 120
     url: "{{ jenkins_master_url }}"
     script: "{{ lookup('template', 'add_slave.groovy.j2') }}"
+  tags:
+    - register
 
 - name: Get the secret jenkins slave
   uri:
@@ -65,14 +44,15 @@
     password: "{{ jenkins_master_password }}"
     return_content: true
   register: jenkins_jnlp_endpoint_response
-
-- debug: var=jenkins_jnlp_endpoint_response verbosity=2
+  tags:
+    - register
 
 - name: Extract Slave secret from http response
   set_fact:
     jenkins_slave_secret: "{{ jenkins_jnlp_endpoint_response.content | regex_search('([a-z0-9]*)(?=</argument>)') }}"
-
-- debug: var=jenkins_slave_secret verbosity=2
+    skip_start_service: false
+  tags:
+    - register
 
 - name: Template Jenkins JNLP slave files
   become: true
@@ -85,4 +65,4 @@
     - { src: jenkins-slave.service, dest: /etc/systemd/system/jenkins-slave.service, mode: 755}
     - {src: jenkins-slave.default, dest: /etc/default/jenkins-slave, mode: 644}
   notify: Start Jenkins JNLP slave
-  tags: jenkins-slave
+  tags: []

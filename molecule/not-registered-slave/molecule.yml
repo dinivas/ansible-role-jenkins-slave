@@ -9,21 +9,18 @@ driver:
 lint:
   name: yamllint
 platforms:
-  - name: js_master-$TOX_ENVNAME
+  - name: js_master_not_registerred_slave-$TOX_ENVNAME
     image: jenkins/jenkins:lts
     pre_build_image: true
     override_command: false
     groups:
       - jenkins_masters
-    # published_ports:
-    #   - 0.0.0.0:8087:8080/tcp
-    #   - 0.0.0.0:50000:50000/tcp
     privileged: true
     volumes:
       - ${MOLECULE_SCENARIO_DIRECTORY}/../master-groovy-files:/usr/share/jenkins/ref/init.groovy.d
     env:
       JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
-  - name: js_centos7-$TOX_ENVNAME
+  - name: js_centos7_not_registerred_slave-$TOX_ENVNAME
     image: centos:7
     privileged: true
     command: "/sbin/init"
@@ -32,12 +29,14 @@ platforms:
       - jenkins_slaves
 provisioner:
   name: ansible
+  env:
+    ANSIBLE_SKIP_TAGS: register  # skip this tag during this scenario
   lint:
     name: ansible-lint
     options:
       x: ["ANSIBLE0006"]
 scenario:
-  name: default
+  name: not-registered-slave
 verifier:
   name: testinfra
   lint:

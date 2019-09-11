@@ -1,3 +1,4 @@
+# {{ansible_managed}}
 # defaults for jenkins-slave component of the jenkins continuous integration
 # system
 
@@ -7,10 +8,10 @@ JENKINS_RUN="{{ jenkins_slave_run }}"
 # URL of jenkins server to connect to
 # Not specifying this parameter will stop the slave
 # job from running.
-JENKINS_URL="{{ jenkins_master_url }}"
+JENKINS_URL="{{ jenkins_master_url | default() }}"
 
 # Node name
 JENKINS_NODE_NAME="{{ jenkins_slave_name }}"
 
 # Secret key to access jenkins server
-JENKINS_SECRET="{{ jenkins_slave_secret }}"
+JENKINS_SECRET="{{ jenkins_slave_secret | default() }}"

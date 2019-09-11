@@ -1,0 +1,32 @@
+---
+- name: Retrieve Master Ip address
+  hosts: jenkins_masters
+  tasks:
+    - name: "Set facts from Jenkins master"
+      set_fact:
+        jenkins_master_ip_address: "{{ ansible_all_ipv4_addresses[0] }}"
+
+    - debug: var=ansible_all_ipv4_addresses verbosity=2
+
+- name: Converge
+  hosts: jenkins_slaves
+  vars:
+    - js_user_groups_definitions:
+        - name: jenkins
+    - js_users_definition:
+        - name: jenkins user
+          username: jenkins
+          groups: [jenkins]
+  roles:
+    - role: ansible-role-jenkins-slave
+      jenkins_slave_home: /home/jenkins
+      jenkins_slave_nb_executor: 2
+      jenkins_slave_user: jenkins
+      jenkins_slave_group: jenkins
+      jenkins_slave_name: docker-slave
+      jenkins_slave_labels:
+        - dinivas
+        - docker
+        - ansible
+        - molecule
+        - tox

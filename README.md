@@ -41,3 +41,7 @@ Example Playbook
           jenkins_slave_user: jenkins
           jenkins_slave_group: jenkins
           jenkins_slave_name: docker-slave
+
+If you only want to install slave service (without registering to the master), you can use `--skip-tags "register"`
+
+
