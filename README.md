@@ -1,6 +1,6 @@
 Role Jenkins Slave
 =========
-[![Build Status](https://travis-ci.com/dinivas/ansible-role-jenkins-slave.svg?branch=master)](https://travis-ci.com/dinivas/ansible-role-jenkins-slave)
+[![Build Status](https://travis-ci.org/dinivas/ansible-role-jenkins-slave.svg?branch=master)](https://travis-ci.org/dinivas/ansible-role-jenkins-slave)
 
 This role create a jenkins slave via JNLP
 
