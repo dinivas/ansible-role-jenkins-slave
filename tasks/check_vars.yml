@@ -1,12 +1,12 @@
 ---
 
-- name: "Check vars | Assert sb_users_definition is defined"
+- name: "Assert Jenkins Master infos are defined"
   assert:
     that:
       - "jenkins_master_url is defined"
       - "jenkins_master_user is defined"
       - "jenkins_master_password is defined"
-    msg: "All Jenkins Master info must be defined"
+    msg: "All Jenkins Master infos must be defined"
   tags:
     - register
 
